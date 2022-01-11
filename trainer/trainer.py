@@ -4,10 +4,10 @@ from torchvision.utils import make_grid
 from base import BaseTrainer
 from utils import inf_loop, MetricTracker, load_state_dict, rename_parallel_state_dict, autocast, use_fp16
 import model.model as module_arch
-import pathlib
+# import pathlib
 import torch.nn.functional as F
-temp = pathlib.PosixPath
-pathlib.PosixPath = pathlib.WindowsPath
+# temp = pathlib.PosixPath
+# pathlib.PosixPath = pathlib.WindowsPath
 
 class Trainer(BaseTrainer):
     """
