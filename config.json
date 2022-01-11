@@ -1,0 +1,57 @@
+{
+    "name": "Food_LT_ResNeXt50_TADE",
+    "n_gpu": 1,
+    "arch": {
+        "type": "ResNeXt50Model",
+        "args": {
+            "num_classes": 1000,
+            "reduce_dimension": true,
+            "use_norm": true,
+            "returns_feat": true,
+            "num_experts": 3
+        }
+    },
+    "data_loader": {
+        "type": "FoodLTDataLoader",
+        "args": {
+            "data_dir": "food_data",
+            "batch_size": 32,
+            "shuffle": true,
+            "num_workers": 0
+        }
+    },
+    "optimizer": {
+        "type": "SGD",
+        "args": {
+            "lr": 0.025,
+            "weight_decay": 5e-4,
+            "momentum": 0.9,
+            "nesterov": true
+        }
+    },
+    "add_extra_info": true,
+    "loss": {
+        "type": "DiverseExpertLoss",
+        "args": {
+            "tau": 2
+        }
+    },
+    "metrics": [
+        "accuracy"
+    ],
+    "lr_scheduler": {
+        "type": "CosineAnnealingLR",
+        "args": {
+            "T_max": 20,
+            "eta_min": 0
+        }
+    },
+    "trainer": {
+        "epochs": 20,
+        "save_dir": "saved",
+        "save_period": 20,
+        "verbosity": 2,
+        "monitor": "max val_accuracy",
+        "tensorboard": false
+    }
+}
