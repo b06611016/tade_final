@@ -42,12 +42,13 @@ class Trainer(BaseTrainer):
         self.do_validation = self.valid_data_loader is not None
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
-        self.hard_rot_criterion_expert1 = torch.nn.CrossEntropyLoss()
-        self.soft_rot_criterion_expert1_to_expert2 = torch.nn.KLDivLoss(reduction='batchmean')
-        self.hard_rot_criterion_expert2 = torch.nn.CrossEntropyLoss()
-        self.soft_rot_criterion_expert2_to_expert3 = torch.nn.KLDivLoss(reduction='batchmean')
-        self.hard_rot_criterion_expert3 = torch.nn.CrossEntropyLoss()
-        self.temperature = 5
+        # self.hard_rot_criterion_expert1 = torch.nn.CrossEntropyLoss()
+        # self.soft_rot_criterion_expert1_to_expert2 = torch.nn.KLDivLoss(reduction='batchmean')
+        # self.hard_rot_criterion_expert2 = torch.nn.CrossEntropyLoss()
+        # self.soft_rot_criterion_expert2_to_expert3 = torch.nn.KLDivLoss(reduction='batchmean')
+        # self.hard_rot_criterion_expert3 = torch.nn.CrossEntropyLoss()
+        # self.temperature = 5
+        self.hard_rot_criterion = torch.nn.CrossEntropyLoss()
 
         self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
         self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
@@ -84,7 +85,8 @@ class Trainer(BaseTrainer):
                     output, loss = output   
                 else:
                     extra_info = {}
-                    output, rot_logits = self.model(data, rot_data)
+                    print("here")
+                    output, rot_logits = self.model(data, epoch=epoch, epoch_length=self.len_epoch, rot_x=rot_data)
 
                     if self.add_extra_info:
                         if isinstance(output, dict):
@@ -99,23 +101,27 @@ class Trainer(BaseTrainer):
 
                     if isinstance(output, dict):
                         output = output["output"]
-                    alpha_weighting = 1.0 - (epoch/self.len_epoch)**2
+                    # alpha_weighting = 1.0 - (epoch/self.len_epoch)**2
                     if self.add_extra_info:
                         loss = self.criterion(output_logits=output, target=target, extra_info=extra_info)
-                        loss_rot_expert1 = self.hard_rot_criterion_expert1(rot_logits[0], rot_label)
-                        loss_rot_expert2 = self.soft_rot_criterion_expert1_to_expert2(F.log_softmax(rot_logits[1]/self.temperature, dim=1), F.softmax(rot_logits[0]/self.temperature, dim=1)) \
-                            * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert2(rot_logits[1], rot_label)
-                        loss_rot_expert3 = self.soft_rot_criterion_expert2_to_expert3(F.log_softmax(rot_logits[2]/self.temperature, dim=1), F.softmax(rot_logits[1]/self.temperature, dim=1)) \
-                            * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert2(rot_logits[2], rot_label)
-                        loss = loss + loss_rot_expert1 + loss_rot_expert2 + loss_rot_expert3
+                        loss_rot = self.hard_rot_criterion(rot_logits, rot_label)
+                        # loss_rot_expert1 = self.hard_rot_criterion_expert1(rot_logits[0], rot_label)
+                        # loss_rot_expert2 = self.soft_rot_criterion_expert1_to_expert2(F.log_softmax(rot_logits[1]/self.temperature, dim=1), F.softmax(rot_logits[0]/self.temperature, dim=1)) \
+                        #     * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert2(rot_logits[1], rot_label)
+                        # loss_rot_expert3 = self.soft_rot_criterion_expert2_to_expert3(F.log_softmax(rot_logits[2]/self.temperature, dim=1), F.softmax(rot_logits[1]/self.temperature, dim=1)) \
+                        #     * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert2(rot_logits[2], rot_label)
+                        # loss = loss + loss_rot_expert1 + loss_rot_expert2 + loss_rot_expert3
+                        loss = loss + loss_rot
                     else:
                         loss = self.criterion(output_logits=output, target=target, extra_info=extra_info)
-                        loss_rot_expert1 = self.hard_rot_criterion_expert1(rot_logits[0], rot_label)
-                        loss_rot_expert2 = self.soft_rot_criterion_expert1_to_expert2(F.log_softmax(rot_logits[1]/self.temperature, dim=1), F.softmax(rot_logits[0]/self.temperature, dim=1)) \
-                            * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert2(rot_logits[1], rot_label)
-                        loss_rot_expert3 = self.soft_rot_criterion_expert2_to_expert3(F.log_softmax(rot_logits[2]/self.temperature, dim=1), F.softmax(rot_logits[1]/self.temperature, dim=1)) \
-                            * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert2(rot_logits[2], rot_label)
-                        loss = loss + loss_rot_expert1 + loss_rot_expert2 + loss_rot_expert3
+                        loss_rot = self.hard_rot_criterion(rot_logits, rot_label)
+                        # loss_rot_expert1 = self.hard_rot_criterion_expert1(rot_logits[0], rot_label)
+                        # loss_rot_expert2 = self.soft_rot_criterion_expert1_to_expert2(F.log_softmax(rot_logits[1]/self.temperature, dim=1), F.softmax(rot_logits[0]/self.temperature, dim=1)) \
+                        #     * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert2(rot_logits[1], rot_label)
+                        # loss_rot_expert3 = self.soft_rot_criterion_expert2_to_expert3(F.log_softmax(rot_logits[2]/self.temperature, dim=1), F.softmax(rot_logits[1]/self.temperature, dim=1)) \
+                        #     * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert2(rot_logits[2], rot_label)
+                        # loss = loss + loss_rot_expert1 + loss_rot_expert2 + loss_rot_expert3
+                        loss = loss + loss_rot
             if not use_fp16:
                 loss.backward()
                 self.optimizer.step()
