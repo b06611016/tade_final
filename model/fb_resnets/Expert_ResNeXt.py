@@ -120,21 +120,28 @@ class ResNext(nn.Module):
         self.inplanes = self.next_inplanes
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.inplanes = self.next_inplanes
-        self.rot_mlp_expert1 = nn.Sequential(
-            nn.Linear(768, 768*2),
-            nn.PReLU(),
-            nn.Linear(768*2, 768*4),
-            nn.PReLU(),
-            nn.Linear(768*4, 4000),
-        )
-        self.rot_mlp_expert2 = nn.Sequential(
-            nn.Linear(768, 768*2),
-            nn.PReLU(),
-            nn.Linear(768*2, 768*4),
-            nn.PReLU(),
-            nn.Linear(768*4, 4000),
-        )
-        self.rot_mlp_expert3 = nn.Sequential(
+        # self.rot_mlp_expert1 = nn.Sequential(
+        #     nn.Linear(768, 768*2),
+        #     nn.PReLU(),
+        #     nn.Linear(768*2, 768*4),
+        #     nn.PReLU(),
+        #     nn.Linear(768*4, 4000),
+        # )
+        # self.rot_mlp_expert2 = nn.Sequential(
+        #     nn.Linear(768, 768*2),
+        #     nn.PReLU(),
+        #     nn.Linear(768*2, 768*4),
+        #     nn.PReLU(),
+        #     nn.Linear(768*4, 4000),
+        # )
+        # self.rot_mlp_expert3 = nn.Sequential(
+        #     nn.Linear(768, 768*2),
+        #     nn.PReLU(),
+        #     nn.Linear(768*2, 768*4),
+        #     nn.PReLU(),
+        #     nn.Linear(768*4, 4000),
+        # )
+        self.rot_mlp = nn.Sequential(
             nn.Linear(768, 768*2),
             nn.PReLU(),
             nn.Linear(768*2, 768*4),
@@ -240,7 +247,7 @@ class ResNext(nn.Module):
         x = x * self.s
         return x
 
-    def forward(self, x, rot_x=None):
+    def forward(self, x, epoch=None, epoch_length=None, rot_x=None):
         with autocast():
             # origin image
             x = self.conv1(x)
@@ -264,17 +271,20 @@ class ResNext(nn.Module):
             outs = []
             self.feat = []
             self.rot_feat = []
-            self.rot_x = []
+            # self.rot_x = []
             for ind in range(self.num_experts):
                 outs.append(self._separate_part(x, ind, rot_x))
             final_out = torch.stack(outs, dim=1).mean(dim=1)
-            if rot_x is not None:
+            if rot_x and epoch and epoch_length is not None:
                 # final_rot = torch.stack(self.rot_feat).mean(dim=0)
                 # print(final_rot.shape)
-                self.rot_x.append(self.rot_mlp_expert1(self.rot_feat[0]))
-                self.rot_x.append(self.rot_mlp_expert2(self.rot_feat[1]))
-                self.rot_x.append(self.rot_mlp_expert3(self.rot_feat[2]))
-                # rot_x = self.rot_mlp(final_rot)
+                # self.rot_x.append(self.rot_mlp_expert1(self.rot_feat[0]))
+                # self.rot_x.append(self.rot_mlp_expert2(self.rot_feat[1]))
+                # self.rot_x.append(self.rot_mlp_expert3(self.rot_feat[2]))
+                expert_1_weighting = 2.0 - (epoch/epoch_length)**2
+                expert_3_weighting = 1.0*(epoch/epoch_length)**2
+                final_rot = expert_1_weighting*self.rot_feat[0] + self.rot_feat[1] + expert_3_weighting*self.rot_feat[2]
+                self.rot_x = self.rot_mlp(final_rot)
                 if self.returns_feat:
                     return {
                         "output": final_out, 
