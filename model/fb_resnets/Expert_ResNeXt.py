@@ -275,7 +275,7 @@ class ResNext(nn.Module):
             for ind in range(self.num_experts):
                 outs.append(self._separate_part(x, ind, rot_x))
             final_out = torch.stack(outs, dim=1).mean(dim=1)
-            if rot_x and epoch and epoch_length is not None:
+            if rot_x is not None and epoch is not None and epoch_length is not None:
                 # final_rot = torch.stack(self.rot_feat).mean(dim=0)
                 # print(final_rot.shape)
                 # self.rot_x.append(self.rot_mlp_expert1(self.rot_feat[0]))
