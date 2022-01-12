@@ -85,7 +85,7 @@ class Trainer(BaseTrainer):
                     output, loss = output   
                 else:
                     extra_info = {}
-                    print("here")
+                    # print("here")
                     output, rot_logits = self.model(data, epoch=epoch, epoch_length=self.len_epoch, rot_x=rot_data)
 
                     if self.add_extra_info:
