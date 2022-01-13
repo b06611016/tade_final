@@ -21,13 +21,13 @@ class Model(BaseModel):
     def _hook_before_iter(self):
         self.backbone._hook_before_iter()
 
-    def forward(self, x, epoch=None, epoch_length=None, rot_x=None, mode=None):
+    def forward(self, x, epoch=None, num_epochs=None, rot_x=None, mode=None):
         if rot_x == None:
             x = self.backbone(x)
             assert mode is None
             return x
         else:
-            x, rot_x = self.backbone(x, epoch=epoch, epoch_length=epoch_length, rot_x=rot_x)
+            x, rot_x = self.backbone(x, epoch=epoch, num_epochs=num_epochs, rot_x=rot_x)
             assert mode is None
             return x, rot_x
 

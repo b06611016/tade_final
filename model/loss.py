@@ -260,14 +260,14 @@ class DiverseExpertLoss(nn.Module):
         
         return inverse_prior
 
-    def forward(self, output_logits, target, extra_info=None, epoch=None, epoch_length=None):
+    def forward(self, output_logits, target, extra_info=None, epoch=None, num_epochs=None):
         if extra_info is None:
             return self.base_loss(output_logits, target)  # output_logits indicates the final prediction
-        if epoch_length is not None and epoch is not None:
-            alpha = 1.0 - ((epoch - 1.0)/epoch_length)**2
+        if num_epochs is not None and epoch is not None:
+            alpha = 1.0 - ((epoch)/num_epochs)**2
         else:
             alpha = 0.0
-
+        # print(alpha)
         loss = 0
         # Obtain logits from each expert  
         expert1_logits = extra_info['logits'][0]
@@ -275,7 +275,7 @@ class DiverseExpertLoss(nn.Module):
         expert3_logits = extra_info['logits'][2]  
  
         # Softmax loss for expert 1 
-        loss += (1+alpha)*self.base_loss(expert1_logits, target)
+        loss += (1.0+alpha)*self.base_loss(expert1_logits, target)
         
         # Balanced Softmax loss for expert 2 
         expert2_logits = expert2_logits + torch.log(self.prior + 1e-9) 
@@ -284,7 +284,7 @@ class DiverseExpertLoss(nn.Module):
         # Inverse Softmax loss for expert 3
         inverse_prior = self.inverse_prior(self.prior)
         expert3_logits = expert3_logits + torch.log(self.prior + 1e-9) - self.tau * torch.log(inverse_prior+ 1e-9) 
-        loss += (1-alpha)*self.base_loss(expert3_logits, target)
+        loss += (1.0-alpha)*self.base_loss(expert3_logits, target)
    
         return loss
     

@@ -247,7 +247,7 @@ class ResNext(nn.Module):
         x = x * self.s
         return x
 
-    def forward(self, x, epoch=None, epoch_length=None, rot_x=None):
+    def forward(self, x, epoch=None, num_epochs=None, rot_x=None):
         with autocast():
             # origin image
             x = self.conv1(x)
@@ -271,11 +271,11 @@ class ResNext(nn.Module):
             outs = []
             self.feat = []
             self.rot_feat = []
-            # self.rot_x = []
+            self.rot_x = []
             for ind in range(self.num_experts):
                 outs.append(self._separate_part(x, ind, rot_x))
             final_out = torch.stack(outs, dim=1).mean(dim=1)
-            if rot_x is not None and epoch is not None and epoch_length is not None:
+            if rot_x is not None and epoch is not None and num_epochs is not None:
                 # final_rot = torch.stack(self.rot_feat).mean(dim=0)
                 # print(final_rot.shape)
                 self.rot_x.append(self.rot_mlp_expert1(self.rot_feat[0]))
