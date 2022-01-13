@@ -104,8 +104,8 @@ class Trainer(BaseTrainer):
                         output = output["output"]
                     alpha_weighting = 1.0 - (epoch/self.epochs)**2
                     if self.add_extra_info:
-                        # loss = self.criterion(output_logits=output, target=target, extra_info=extra_info, epoch=epoch, epoch_length=self.epochs)
-                        loss = self.criterion(output_logits=output, target=target, extra_info=extra_info)
+                        loss = self.criterion(output_logits=output, target=target, extra_info=extra_info, epoch=epoch, num_epochs=self.epochs)
+                        # loss = self.criterion(output_logits=output, target=target, extra_info=extra_info)
                         # loss_rot = self.hard_rot_criterion(rot_logits, rot_label)
                         loss_rot_expert1 = self.hard_rot_criterion_expert1(rot_logits[0], rot_label)
                         loss_rot_expert2 = self.soft_rot_criterion_expert1_to_expert2(F.log_softmax(rot_logits[1]/self.temperature, dim=1), F.softmax(rot_logits[0]/self.temperature, dim=1)) \
@@ -115,8 +115,8 @@ class Trainer(BaseTrainer):
                         loss = loss + loss_rot_expert1 + loss_rot_expert2 + loss_rot_expert3
                         # loss = loss + loss_rot
                     else:
-                        # loss = self.criterion(output_logits=output, target=target, extra_info=extra_info, epoch=epoch, epoch_length=self.epochs)
-                        loss = self.criterion(output_logits=output, target=target, extra_info=extra_info)
+                        loss = self.criterion(output_logits=output, target=target, extra_info=extra_info, epoch=epoch, num_epochs=self.epochs)
+                        # loss = self.criterion(output_logits=output, target=target, extra_info=extra_info)
                         # loss_rot = self.hard_rot_criterion(rot_logits, rot_label)
                         loss_rot_expert1 = self.hard_rot_criterion_expert1(rot_logits[0], rot_label)
                         loss_rot_expert2 = self.soft_rot_criterion_expert1_to_expert2(F.log_softmax(rot_logits[1]/self.temperature, dim=1), F.softmax(rot_logits[0]/self.temperature, dim=1)) \

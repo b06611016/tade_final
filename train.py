@@ -13,7 +13,7 @@ from trainer import Trainer
 # temp = pathlib.PosixPath
 # pathlib.PosixPath = pathlib.WindowsPath
 
-deterministic = False
+deterministic = True
 if deterministic:
     # fix random seeds for reproducibility
     SEED = 123
