@@ -111,7 +111,7 @@ class Trainer(BaseTrainer):
                         loss_rot_expert2 = self.soft_rot_criterion_expert1_to_expert2(F.log_softmax(rot_logits[1]/self.temperature, dim=1), F.softmax(rot_logits[0]/self.temperature, dim=1)) \
                             * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert2(rot_logits[1], rot_label)
                         loss_rot_expert3 = self.soft_rot_criterion_expert2_to_expert3(F.log_softmax(rot_logits[2]/self.temperature, dim=1), F.softmax(rot_logits[1]/self.temperature, dim=1)) \
-                            * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert2(rot_logits[2], rot_label)
+                            * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert3(rot_logits[2], rot_label)
                         loss = loss + loss_rot_expert1 + loss_rot_expert2 + loss_rot_expert3
                         # loss = loss + loss_rot
                     else:
@@ -122,7 +122,7 @@ class Trainer(BaseTrainer):
                         loss_rot_expert2 = self.soft_rot_criterion_expert1_to_expert2(F.log_softmax(rot_logits[1]/self.temperature, dim=1), F.softmax(rot_logits[0]/self.temperature, dim=1)) \
                             * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert2(rot_logits[1], rot_label)
                         loss_rot_expert3 = self.soft_rot_criterion_expert2_to_expert3(F.log_softmax(rot_logits[2]/self.temperature, dim=1), F.softmax(rot_logits[1]/self.temperature, dim=1)) \
-                            * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert2(rot_logits[2], rot_label)
+                            * (self.temperature * self.temperature) * (1 - alpha_weighting) + alpha_weighting * self.hard_rot_criterion_expert3(rot_logits[2], rot_label)
                         loss = loss + loss_rot_expert1 + loss_rot_expert2 + loss_rot_expert3
                         # loss = loss + loss_rot
             if not use_fp16:
